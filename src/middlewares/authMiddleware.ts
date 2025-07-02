@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import jwkToPem from "jwk-to-pem";
-import fetch from "node-fetch";
+import { AppDataSource } from "../config/data-source";
+import { User } from "../entities/User";
 
-const SUPABASE_JWKS_URL = "https://lbgvqqcynjmcipcjsene.supabase.co/auth/v1/keys";
+const JWT_SECRET = process.env.SUPABASE_JWT_SECRET!;
+const userRepo = AppDataSource.getRepository(User);
 
-export const authMiddleware = (req: Request, res: Response, next: NextFunction): void => {
+export const authMiddleware = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     const authHeader = req.headers.authorization;
 
     if (!authHeader?.startsWith("Bearer ")) {
@@ -14,28 +15,27 @@ export const authMiddleware = (req: Request, res: Response, next: NextFunction):
     }
 
     const token = authHeader.split(" ")[1];
-    const decodedHeader = jwt.decode(token, { complete: true }) as any;
-    const kid = decodedHeader?.header?.kid;
 
-    if (!kid) {
-        res.status(401).json({ error: "Token inválido" });
-        return;
+    try {
+        const decoded: any = jwt.verify(token, JWT_SECRET);
+        (req as any).user = decoded;
+
+        // 🧠 Sincronizar usuario en DB local si no existe
+        const userId = decoded.sub;
+        const email = decoded.email;
+        const name = email?.split("@")[0] || "Usuario Supabase";
+
+        let user = await userRepo.findOne({ where: { id: userId } });
+
+        if (!user) {
+            user = userRepo.create({ id: userId, email, name });
+            await userRepo.save(user);
+            console.log(`✅ Usuario sincronizado: ${email}`);
+        }
+
+        next();
+    } catch (error) {
+        console.error("❌ Error en authMiddleware:", error);
+        res.status(401).json({ error: "Token inválido o expirado" });
     }
-
-    globalThis.fetch(SUPABASE_JWKS_URL)
-        .then((res) => res.json() as Promise<{ keys: any[] }>)
-        .then(({ keys }) => {
-            const jwk = keys.find((key) => key.kid === kid);
-            if (!jwk) throw new Error("Clave no encontrada");
-
-            const publicKey = jwkToPem(jwk);
-            const verified = jwt.verify(token, publicKey);
-            req.user = verified;
-
-            next();
-        })
-        .catch((err) => {
-            console.error("❌ Error en authMiddleware:", err);
-            res.status(401).json({ error: "Token inválido o expirado" });
-        });
 };

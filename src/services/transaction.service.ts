@@ -10,7 +10,7 @@ export const transactionService = {
     async createTransaction(userId: string, data: any) {
         const { type, amount, category, description, date } = data;
 
-        const user = await userRepo.findOneByOrFail({ id: Number(userId) });
+        const user = await userRepo.findOneByOrFail({ id: userId });
 
         const transaction = transactionRepo.create({
             type,
@@ -26,7 +26,7 @@ export const transactionService = {
     // Obtiene todas las transacciones del usuario
     async getAllTransactions(userId: string) {
         return await transactionRepo.find({
-            where: { user: { id: Number(userId) } },
+            where: { user: { id: userId } },
             order: { date: "DESC" },
         });
     },
@@ -35,7 +35,7 @@ export const transactionService = {
         const transaction = await transactionRepo.findOne({
             where: {
                 id: transactionId,
-                user: { id: Number(userId) },
+                user: { id: userId }
             },
         });
 
@@ -51,7 +51,7 @@ export const transactionService = {
         const transaction = await transactionRepo.findOne({
             where: {
                 id: transactionId,
-                user: { id: Number(userId) },
+                user: { id: userId }
             },
         });
 
@@ -69,7 +69,7 @@ export const transactionService = {
         const transaction = await transactionRepo.findOne({
             where: {
                 id: transactionId,
-                user: { id: Number(userId) },
+                user: { id: userId },
             },
         });
 

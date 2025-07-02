@@ -17,5 +17,8 @@ docker-compose down
 ## Compilar proyecto manualmente
 npm run build # Requiere tener PostgreSQL corriendo localmente y .env bien configurado.
 
+## Reiniciar proyecto
+docker-compose restart
+
 
 
