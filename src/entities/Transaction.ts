@@ -17,7 +17,14 @@ export class Transaction {
     @Column({ type: "enum", enum: ["income", "expense"] })
     type!: TransactionType;
 
-    @Column("decimal", { precision: 10, scale: 2 })
+    @Column("decimal", {
+        precision: 10,
+        scale: 2,
+        transformer: {
+            to: (value: number) => value,
+            from: (value: string) => parseFloat(value),
+        },
+    })
     amount!: number;
 
     @Column()
