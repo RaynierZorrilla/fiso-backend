@@ -5,15 +5,27 @@ import dotenv from 'dotenv';
 import userRoutes from './routes/user.routes';
 import transactionRoutes from './routes/transaction.routes';
 import meRoutes from './routes/me.routes';
+import cors from 'cors';
+import budgetRoutes from './routes/budget.routes';
 
 dotenv.config();
 
 const app = express();
+
+// Configuración de CORS
+app.use(cors({
+    origin: ["http://localhost:5173"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+}));
+
 app.use(express.json());
 
 app.use('/api/users', userRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/me', meRoutes);
+app.use('/api/budgets', budgetRoutes);
 
 app.get('/', (_req, res) => {
     res.send('🚀 FISO API is running');
