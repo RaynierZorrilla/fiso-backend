@@ -6,6 +6,7 @@ import userRoutes from './routes/user.routes';
 import transactionRoutes from './routes/transaction.routes';
 import meRoutes from './routes/me.routes';
 import cors from 'cors';
+import budgetRoutes from './routes/budget.routes';
 
 dotenv.config();
 
@@ -24,6 +25,7 @@ app.use(express.json());
 app.use('/api/users', userRoutes);
 app.use('/api/transactions', transactionRoutes);
 app.use('/api/me', meRoutes);
+app.use('/api/budgets', budgetRoutes);
 
 app.get('/', (_req, res) => {
     res.send('🚀 FISO API is running');
