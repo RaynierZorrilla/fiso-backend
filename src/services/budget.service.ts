@@ -1,9 +1,11 @@
 import { AppDataSource } from "../config/data-source";
 import { Budget } from "../entities/Budget";
 import { User } from "../entities/User";
+import { Transaction } from "../entities/Transaction";
 
 const budgetRepo = AppDataSource.getRepository(Budget);
 const userRepo = AppDataSource.getRepository(User);
+const transactionRepo = AppDataSource.getRepository(Transaction);
 
 export const budgetService = {
     async create(userId: string, data: Partial<Budget>) {
@@ -22,6 +24,40 @@ export const budgetService = {
             where: { user: { id: userId } },
             order: { month: "DESC" },
         });
+    },
+
+    async getSummary(userId: string) {
+        const budgets = await budgetRepo.find({
+            where: { user: { id: userId } },
+        });
+
+        const transactions = await transactionRepo.find({
+            where: { user: { id: userId } },
+        });
+
+        let totalBudgeted = 0;
+        let totalSpent = 0;
+
+        for (const budget of budgets) {
+            totalBudgeted += Number(budget.limit);
+
+            const spent = transactions
+                .filter(
+                    (t) =>
+                        t.type === "expense" &&
+                        t.category === budget.category &&
+                        t.date.toISOString().startsWith(budget.month)
+                )
+                .reduce((sum, t) => sum + Number(t.amount), 0);
+
+            totalSpent += spent;
+        }
+
+        return {
+            totalBudgeted,
+            totalSpent,
+            available: totalBudgeted - totalSpent,
+        };
     },
 
     async update(userId: string, budgetId: string, data: Partial<Budget>) {
