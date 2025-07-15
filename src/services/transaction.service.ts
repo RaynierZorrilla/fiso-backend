@@ -46,6 +46,23 @@ export const transactionService = {
         return transaction;
     },
 
+    // Obtiene un resumen de las transacciones del usuario
+    async getSummary(userId: string) {
+        const [transactions, total] = await transactionRepo.findAndCount({
+            where: { user: { id: userId } },
+        });
+
+        const income = transactions
+            .filter(t => t.type === "income")
+            .reduce((sum, t) => sum + t.amount, 0);
+
+        const expenses = transactions
+            .filter(t => t.type === "expense")
+            .reduce((sum, t) => sum + t.amount, 0);
+
+        return { income, expenses, total }; // total = número de transacciones
+    },
+
     // Actualiza una transacción por ID
     async updateTransaction(userId: string, transactionId: string, data: Partial<Transaction>) {
         const transaction = await transactionRepo.findOne({

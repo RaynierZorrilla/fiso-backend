@@ -7,6 +7,7 @@ const router = Router();
 // Protegidas con authMiddleware
 router.post("/", authMiddleware, transactionController.create);
 router.get("/", authMiddleware, transactionController.getAll);
+router.get("/summary", authMiddleware, transactionController.getSummary);
 router.get("/:id", authMiddleware, transactionController.getById);
 router.put("/:id", authMiddleware, transactionController.update);
 router.delete("/:id", authMiddleware, transactionController.remove);

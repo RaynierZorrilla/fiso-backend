@@ -39,6 +39,19 @@ export const transactionController = {
         }
     },
 
+    // GET /api/transactions/summary
+    async getSummary(req: Request, res: Response): Promise<void> {
+        const userId = (req as any).user.sub;
+
+        try {
+            const summary = await transactionService.getSummary(userId);
+            res.json(summary);
+        } catch (err) {
+            console.error("❌ Error al obtener resumen:", err);
+            res.status(500).json({ error: "Error al obtener el resumen" });
+        }
+    },
+
     // PUT /api/transactions/:id
     async update(req: Request, res: Response): Promise<void> {
         const userId = (req as any).user.sub;
