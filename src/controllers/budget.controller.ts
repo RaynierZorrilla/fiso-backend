@@ -23,6 +23,17 @@ export const budgetController = {
         }
     },
 
+    async summary(req: Request, res: Response) {
+        try {
+            const userId = getUserIdFromRequest(req);
+            const data = await budgetService.getSummary(userId);
+            res.json(data);
+        } catch (err) {
+            res.status(500).json({ error: "Error al obtener el resumen de presupuesto" });
+        }
+    },
+
+
     async update(req: Request, res: Response) {
         try {
             const userId = getUserIdFromRequest(req);
