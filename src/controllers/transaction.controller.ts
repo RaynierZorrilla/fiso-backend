@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import { transactionService } from "../services/transaction.service";
+import { getUserIdFromRequest } from "../utils/getUserIdFromRequest";
+
 
 export const transactionController = {
     // POST /api/transactions
     async create(req: Request, res: Response): Promise<void> {
-        const userId = (req as any).user.sub;
+        const userId = getUserIdFromRequest(req);
 
         try {
             const transaction = await transactionService.createTransaction(userId, req.body);
@@ -16,7 +18,7 @@ export const transactionController = {
     },
     // GET /api/transactions
     async getAll(req: Request, res: Response): Promise<void> {
-        const userId = (req as any).user.sub;
+        const userId = getUserIdFromRequest(req);
 
         try {
             const transactions = await transactionService.getAllTransactions(userId);
@@ -28,7 +30,7 @@ export const transactionController = {
     },
     // GET /api/transactions/:id
     async getById(req: Request, res: Response): Promise<void> {
-        const userId = (req as any).user.sub;
+        const userId = getUserIdFromRequest(req);
         const transactionId = req.params.id;
 
         try {
@@ -41,7 +43,7 @@ export const transactionController = {
 
     // GET /api/transactions/summary
     async getSummary(req: Request, res: Response): Promise<void> {
-        const userId = (req as any).user.sub;
+        const userId = getUserIdFromRequest(req);
 
         try {
             const summary = await transactionService.getSummary(userId);
@@ -54,7 +56,7 @@ export const transactionController = {
 
     // PUT /api/transactions/:id
     async update(req: Request, res: Response): Promise<void> {
-        const userId = (req as any).user.sub;
+        const userId = getUserIdFromRequest(req);
         const transactionId = req.params.id;
         const data = req.body;
 
@@ -68,7 +70,7 @@ export const transactionController = {
 
     // DELETE /api/transactions/:id
     async remove(req: Request, res: Response): Promise<void> {
-        const userId = (req as any).user.sub;
+        const userId = getUserIdFromRequest(req);
         const transactionId = req.params.id;
 
         try {
