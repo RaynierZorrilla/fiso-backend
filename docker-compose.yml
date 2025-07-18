@@ -9,12 +9,16 @@ services:
       - "3000:3000"
     depends_on:
       - postgres
+    env_file:
+      - .env
     environment:
       - DB_HOST=postgres
       - DB_PORT=5432
       - DB_USER=fiso_user
       - DB_PASSWORD=fiso_pass
       - DB_NAME=fiso_db
+    volumes:
+      - .:/app
 
   postgres:
     image: postgres:14
