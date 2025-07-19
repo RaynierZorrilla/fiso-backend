@@ -3,6 +3,7 @@ import {
     PrimaryGeneratedColumn,
     Column,
     ManyToOne,
+    JoinColumn,
     CreateDateColumn,
 } from "typeorm";
 import { User } from "./User";
@@ -39,6 +40,10 @@ export class Transaction {
     @CreateDateColumn({ type: "timestamp" })
     created_at!: Date;
 
+    @Column("uuid")
+    userId!: string;
+
     @ManyToOne(() => User, { nullable: false })
+    @JoinColumn({ name: "userId" })
     user!: User;
 }

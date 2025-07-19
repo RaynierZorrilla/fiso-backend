@@ -5,6 +5,7 @@ import {
     CreateDateColumn,
     UpdateDateColumn,
     ManyToOne,
+    JoinColumn,
 } from "typeorm";
 import { User } from "./User";
 
@@ -28,6 +29,10 @@ export class Budget {
     @UpdateDateColumn()
     updated_at!: Date;
 
+    @Column("uuid")
+    userId!: string;
+
     @ManyToOne(() => User, { nullable: false })
+    @JoinColumn({ name: "userId" })
     user!: User;
 }
