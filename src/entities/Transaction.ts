@@ -41,9 +41,9 @@ export class Transaction {
     created_at!: Date;
 
     @Column("uuid")
-    user_id!: string;
+    userId!: string;
 
     @ManyToOne(() => User, { nullable: false })
-    @JoinColumn({ name: "user_id" })
+    @JoinColumn({ name: "userId" })
     user!: User;
 }

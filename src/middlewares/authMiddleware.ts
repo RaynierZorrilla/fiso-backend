@@ -36,7 +36,7 @@ export const authMiddleware = async (
         const name = userInfo.user.user_metadata?.name || email?.split("@")[0];
 
         // Añadir al request para uso posterior
-        req.user = { id: userId, email };
+        req.user = { id: userId, email: email || "" };
 
         // Sincronizar con base de datos local si no existe
         let user = await userRepo.findOneBy({ id: userId });
