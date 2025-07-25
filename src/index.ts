@@ -4,7 +4,6 @@ import { AppDataSource } from './config/data-source';
 import dotenv from 'dotenv';
 import userRoutes from './routes/user.routes';
 import transactionRoutes from './routes/transaction.routes';
-import meRoutes from './routes/me.routes';
 import cors from 'cors';
 import budgetRoutes from './routes/budget.routes';
 
@@ -24,20 +23,25 @@ app.use(express.json());
 
 app.use('/api/users', userRoutes);
 app.use('/api/transactions', transactionRoutes);
-app.use('/api/me', meRoutes);
 app.use('/api/budgets', budgetRoutes);
 
 app.get('/', (_req, res) => {
     res.send('🚀 FISO API is running');
 });
 
-const PORT = process.env.PORT || 3000;
+// Exportar la app para testing
+export default app;
 
-AppDataSource.initialize()
-    .then(() => {
-        console.log('📦 Database connected');
-        app.listen(PORT, () => {
-            console.log(`🚀 Server running on port ${PORT}`);
-        });
-    })
-    .catch((error) => console.error('❌ Error connecting to database:', error));
+// Solo arrancar el servidor si este archivo se ejecuta directamente
+if (require.main === module) {
+    const PORT = process.env.PORT || 3000;
+
+    AppDataSource.initialize()
+        .then(() => {
+            console.log('📦 Database connected');
+            app.listen(PORT, () => {
+                console.log(`🚀 Server running on port ${PORT}`);
+            });
+        })
+        .catch((error) => console.error('❌ Error connecting to database:', error));
+}

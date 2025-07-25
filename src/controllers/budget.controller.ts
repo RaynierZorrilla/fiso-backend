@@ -41,7 +41,11 @@ export const budgetController = {
             const updated = await budgetService.update(userId, id, req.body);
             res.json(updated);
         } catch (err) {
-            res.status(400).json({ error: "Error al actualizar presupuesto" });
+            if (err && typeof err === "object" && "message" in err && (err as any).message === "Presupuesto no encontrado") {
+                res.status(404).json({ error: (err as any).message });
+            } else {
+                res.status(400).json({ error: "Error al actualizar presupuesto" });
+            }
         }
     },
 
@@ -52,7 +56,11 @@ export const budgetController = {
             await budgetService.delete(userId, id);
             res.json({ message: "Presupuesto eliminado" });
         } catch (err) {
-            res.status(400).json({ error: "Error al eliminar presupuesto" });
+            if (err && typeof err === "object" && "message" in err && (err as any).message === "Presupuesto no encontrado") {
+                res.status(404).json({ error: (err as any).message });
+            } else {
+                res.status(400).json({ error: "Error al eliminar presupuesto" });
+            }
         }
     },
 };
