@@ -21,14 +21,14 @@ export const budgetService = {
 
     async getAll(userId: string) {
         return await budgetRepo.find({
-            where: { user: { id: userId } },
+            where: { userId },
             order: { month: "DESC" },
         });
     },
 
     async getSummary(userId: string) {
         const budgets = await budgetRepo.find({
-            where: { user: { id: userId } },
+            where: { userId },
         });
 
         const transactions = await transactionRepo.find({
@@ -62,7 +62,7 @@ export const budgetService = {
 
     async update(userId: string, budgetId: string, data: Partial<Budget>) {
         const budget = await budgetRepo.findOne({
-            where: { id: budgetId, user: { id: userId } },
+            where: { id: budgetId, userId },
         });
 
         if (!budget) throw new Error("Presupuesto no encontrado");
@@ -73,7 +73,7 @@ export const budgetService = {
 
     async delete(userId: string, budgetId: string) {
         const budget = await budgetRepo.findOne({
-            where: { id: budgetId, user: { id: userId } },
+            where: { id: budgetId, userId },
         });
 
         if (!budget) throw new Error("Presupuesto no encontrado");

@@ -19,6 +19,7 @@ export const budgetController = {
             const budgets = await budgetService.getAll(userId);
             res.json(budgets);
         } catch (err) {
+            console.error("❌ Error en GET /api/budgets:", err);
             res.status(400).json({ error: "Error al obtener presupuestos" });
         }
     },
