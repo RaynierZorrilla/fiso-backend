@@ -15,13 +15,19 @@ export class Goal {
     id!: string;
 
     @Column("varchar")
-    category!: string;
+    titulo!: string;
+
+    @Column("text")
+    descripcion!: string;
 
     @Column("decimal", { precision: 10, scale: 2 })
-    limit!: number;
+    montoObjetivo!: number;
+
+    @Column("decimal", { precision: 10, scale: 2, default: 0 })
+    montoActual!: number;
 
     @Column({ type: "date" })
-    date!: Date;
+    fechaObjetivo!: Date;
 
     @CreateDateColumn()
     created_at!: Date;

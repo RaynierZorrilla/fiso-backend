@@ -1,11 +1,9 @@
 import { AppDataSource } from "../config/data-source";
 import { Goal } from "../entities/Goal";
 import { User } from "../entities/User";
-import { Transaction } from "../entities/Transaction";
 
 const goalRepo = AppDataSource.getRepository(Goal);
 const userRepo = AppDataSource.getRepository(User);
-const transactionRepo = AppDataSource.getRepository(Transaction);
 
 export const goalService = {
     async create(userId: string, data: Partial<Goal>) {
@@ -13,6 +11,7 @@ export const goalService = {
 
         const goal = goalRepo.create({
             ...data,
+            montoActual: data.montoActual || 0,
             user,
         });
 
@@ -22,7 +21,7 @@ export const goalService = {
     async getAll(userId: string) {
         return await goalRepo.find({
             where: { userId },
-            order: { date: "DESC" },
+            order: { fechaObjetivo: "ASC" },
         });
     },
 
@@ -31,32 +30,24 @@ export const goalService = {
             where: { userId },
         });
 
-        const transactions = await transactionRepo.find({
-            where: { user: { id: userId } },
-        });
-
-        let totalGoalLimit = 0;
-        let totalSpent = 0;
+        let totalObjetivo = 0;
+        let totalAhorrado = 0;
+        let metasActivas = 0;
 
         for (const goal of goals) {
-            totalGoalLimit += Number(goal.limit);
-
-            const spent = transactions
-                .filter(
-                    (t) =>
-                        t.type === "expense" &&
-                        t.category === goal.category &&
-                        t.date.toISOString().split('T')[0] === goal.date.toISOString().split('T')[0]
-                )
-                .reduce((sum, t) => sum + Number(t.amount), 0);
-
-            totalSpent += spent;
+            totalObjetivo += Number(goal.montoObjetivo);
+            totalAhorrado += Number(goal.montoActual);
+            
+            // Una meta está activa si no ha alcanzado su objetivo
+            if (Number(goal.montoActual) < Number(goal.montoObjetivo)) {
+                metasActivas++;
+            }
         }
 
         return {
-            totalGoalLimit,
-            totalSpent,
-            remaining: totalGoalLimit - totalSpent,
+            metasActivas,
+            totalAhorrado,
+            metaObjetivo: totalObjetivo
         };
     },
 
