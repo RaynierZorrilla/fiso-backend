@@ -3,6 +3,7 @@ import { User } from '../entities/User';
 import dotenv from 'dotenv';
 import { Transaction } from '../entities/Transaction';
 import { Budget } from "../entities/Budget";
+import { Goal } from "../entities/Goal";
 
 dotenv.config();
 
@@ -15,6 +16,6 @@ export const AppDataSource = new DataSource({
     database: process.env.DB_NAME,
     synchronize: false,
     logging: false,
-    entities: [User, Transaction, Budget],
+    entities: [User, Transaction, Budget, Goal],
     migrations: [__dirname + '/../migrations/*.{ts,js}'],
 });
