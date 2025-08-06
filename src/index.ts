@@ -9,6 +9,7 @@ import budgetRoutes from './routes/budget.routes';
 import profileRoutes from './routes/profile.routes';
 import goalRoutes from './routes/goal.routes';
 import reportRoutes from './routes/report.routes';
+import financeBotRoutes from './routes/finance-bot.routes';
 
 dotenv.config();
 
@@ -30,7 +31,7 @@ app.use('/api/budgets', budgetRoutes);
 app.use('/api/profile', profileRoutes);
 app.use('/api/goals', goalRoutes);
 app.use('/api/reports', reportRoutes);
-
+app.use('/api/chat', financeBotRoutes);
 app.get('/', (_req, res) => {
     res.send('🚀 FISO API is running');
 });
