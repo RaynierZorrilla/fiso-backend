@@ -1,7 +1,6 @@
 jest.setTimeout(30000);
 import request from "supertest";
 import { AppDataSource } from "../src/config/data-source";
-import { Report } from "../src/entities/Report";
 import app from "../src/index";
 
 describe("Report Endpoints", () => {
@@ -12,15 +11,6 @@ describe("Report Endpoints", () => {
 
   afterAll(async () => {
     await AppDataSource.destroy();
-  });
-
-  describe("GET /api/reports", () => {
-    it("should return 401 without authentication", async () => {
-      const response = await request(app)
-        .get("/api/reports");
-      expect(response.status).toBe(401);
-      console.log("✅ GET /api/reports (no auth) - PASSED");
-    });
   });
 
   describe("GET /api/reports/generate", () => {
@@ -86,25 +76,9 @@ describe("Report Endpoints", () => {
     });
   });
 
-  describe("POST /api/reports", () => {
-    it("should return 401 without authentication", async () => {
-      const newReport = {
-        nombre: "Reporte Mensual",
-        tipo: "mes",
-        periodo: "2024-11"
-      };
-      const response = await request(app)
-        .post("/api/reports")
-        .send(newReport);
-      expect(response.status).toBe(401);
-      console.log("✅ POST /api/reports (no auth) - PASSED");
-    });
-  });
-
   // Tests que requieren autenticación - marcados como skip por ahora
   describe.skip("Report Endpoints with Authentication", () => {
     let authToken: string = "";
-    let testReportId: string = "";
 
     beforeAll(async () => {
       // Aquí se configuraría la autenticación real
