@@ -4,6 +4,7 @@ import {
     Column,
     ManyToOne,
     CreateDateColumn,
+    JoinColumn
 } from "typeorm";
 import { User } from "./User";
 
@@ -39,6 +40,10 @@ export class Transaction {
     @CreateDateColumn({ type: "timestamp" })
     created_at!: Date;
 
+    @Column()
+    userId!: string;
+
     @ManyToOne(() => User, { nullable: false })
+    @JoinColumn({ name: "userId" })
     user!: User;
 }

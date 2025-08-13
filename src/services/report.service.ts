@@ -1,5 +1,4 @@
 import { AppDataSource } from "../config/data-source";
-import { Report } from "../entities/Report";
 import { User } from "../entities/User";
 import { Transaction } from "../entities/Transaction";
 import { Goal } from "../entities/Goal";
@@ -8,41 +7,45 @@ import { Parser } from "json2csv";
 // @ts-ignore
 import PDFDocument from "pdfkit";
 
-const reportRepo = AppDataSource.getRepository(Report);
 const userRepo = AppDataSource.getRepository(User);
 const transactionRepo = AppDataSource.getRepository(Transaction);
 const goalRepo = AppDataSource.getRepository(Goal);
 
 export const reportService = {
-    async create(userId: string, data: Partial<Report>) {
-        const user = await userRepo.findOneByOrFail({ id: userId });
-
-        const report = reportRepo.create({
-            ...data,
-            user,
-        });
-
-        return await reportRepo.save(report);
-    },
-
-    async getAll(userId: string) {
-        return await reportRepo.find({
-            where: { userId },
-            order: { created_at: "DESC" },
-        });
-    },
-
     async generateReport(userId: string, tipo: string, periodo?: string) {
         let transactions: Transaction[] = [];
         let goals: Goal[] = [];
 
-        // Obtener transacciones según el filtro
-        switch (tipo) {
+        // Determinar el tipo de filtro temporal y el tipo de transacción
+        let filtroTemporal = 'todos';
+        let tipoTransaccion = 'todos';
+        
+        // Si el tipo es 'mes' o 'year', entonces es un filtro temporal
+        if (tipo === 'mes' || tipo === 'year') {
+            filtroTemporal = tipo;
+            tipoTransaccion = 'todos';
+        } else {
+            // Si no es temporal, entonces es tipo de transacción
+            tipoTransaccion = tipo;
+            // Intentar determinar el filtro temporal del período
+            if (periodo) {
+                if (periodo.includes('-') && periodo.length === 7) { // formato YYYY-MM
+                    filtroTemporal = 'mes';
+                } else if (periodo.length === 4 && /^\d{4}$/.test(periodo)) { // formato YYYY
+                    filtroTemporal = 'year';
+                }
+            }
+        }
+
+        // Obtener transacciones según el filtro temporal
+        switch (filtroTemporal) {
             case 'mes':
-                if (!periodo) throw new Error("Período requerido para filtro mensual");
-                const startMonth = new Date(periodo + '-01');
-                const endMonth = new Date(startMonth);
-                endMonth.setMonth(endMonth.getMonth() + 1);
+                if (!periodo) throw new Error("Período requerido para filtro mensual (formato: YYYY-MM)");
+                
+                // Corregir el manejo de fechas para formato YYYY-MM
+                const [year, month] = periodo.split('-').map(Number);
+                const startMonth = new Date(year, month - 1, 1); // Mes 0-indexed
+                const endMonth = new Date(year, month, 1); // Siguiente mes
                 
                 transactions = await transactionRepo
                     .createQueryBuilder("transaction")
@@ -54,9 +57,12 @@ export const reportService = {
                 break;
 
             case 'year':
-                if (!periodo) throw new Error("Año requerido para filtro anual");
-                const startYear = new Date(periodo + '-01-01');
-                const endYear = new Date(periodo + '-12-31');
+                if (!periodo) throw new Error("Año requerido para filtro anual (formato: YYYY)");
+                
+                // Corregir el manejo de fechas para formato YYYY
+                const yearNum = parseInt(periodo);
+                const startYear = new Date(yearNum, 0, 1); // 1 de enero
+                const endYear = new Date(yearNum, 11, 31, 23, 59, 59, 999); // 31 de diciembre
                 
                 transactions = await transactionRepo
                     .createQueryBuilder("transaction")
@@ -69,13 +75,25 @@ export const reportService = {
 
             case 'todos':
                 transactions = await transactionRepo.find({
-                    where: { user: { id: userId } },
+                    where: { userId },
                     order: { date: "ASC" }
                 });
                 break;
 
             default:
-                throw new Error("Tipo de filtro no válido");
+                throw new Error("Tipo de filtro temporal no válido");
+        }
+
+        // Aplicar filtro por tipo de transacción si no es 'todos'
+        if (tipoTransaccion !== 'todos') {
+            transactions = transactions.filter(transaction => {
+                if (tipoTransaccion === 'ingresos') {
+                    return transaction.type === 'income';
+                } else if (tipoTransaccion === 'gastos') {
+                    return transaction.type === 'expense';
+                }
+                return true;
+            });
         }
 
         // Obtener metas
@@ -87,7 +105,7 @@ export const reportService = {
         const summary = this.calculateSummary(transactions);
 
         // Calcular tendencias mensuales
-        const tendencias = this.calculateTendenciasMensuales(transactions);
+        const tendencias = this.calculateTendenciasMensuales(transactions, filtroTemporal, periodo);
 
         // Calcular categorías con más gastos
         const categoriasGastos = this.calculateCategoriasGastos(transactions);
@@ -101,7 +119,8 @@ export const reportService = {
             categoriasGastos,
             progresoMetas,
             filtros: {
-                tipo,
+                tipo: tipoTransaccion,
+                filtroTemporal,
                 periodo,
                 totalTransacciones: transactions.length
             }
@@ -129,16 +148,44 @@ export const reportService = {
         };
     },
 
-    calculateTendenciasMensuales(transactions: Transaction[]) {
+    calculateTendenciasMensuales(transactions: Transaction[], filtroTemporal: string, periodo?: string) {
         const tendencias: any[] = [];
+        
+        // Si es un filtro temporal específico, mostrar solo ese período
+        if (filtroTemporal === 'mes' && periodo) {
+            const [year, month] = periodo.split('-').map(Number);
+            const fecha = new Date(year, month - 1, 1); // Mes 0-indexed
+            const mesNombre = fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+            
+            let ingresos = 0;
+            let gastos = 0;
+            
+            transactions.forEach(transaction => {
+                if (transaction.type === 'income') {
+                    ingresos += Number(transaction.amount);
+                } else {
+                    gastos += Number(transaction.amount);
+                }
+            });
+            
+            tendencias.push({
+                mes: mesNombre,
+                ingresos,
+                gastos,
+                balance: ingresos - gastos
+            });
+            
+            return tendencias;
+        }
+        
+        // Para filtro 'year' y 'todos': SOLO mostrar meses donde hay transacciones
         const mesesMap = new Map<string, { ingresos: number, gastos: number }>();
 
-        // Agrupar transacciones por mes
+        // Agrupar transacciones por mes (solo meses con transacciones reales)
         transactions.forEach(transaction => {
             const fecha = new Date(transaction.date);
             const mesKey = `${fecha.getFullYear()}-${String(fecha.getMonth() + 1).padStart(2, '0')}`;
-            const mesNombre = fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-
+            
             if (!mesesMap.has(mesKey)) {
                 mesesMap.set(mesKey, { ingresos: 0, gastos: 0 });
             }
@@ -151,7 +198,7 @@ export const reportService = {
             }
         });
 
-        // Convertir a array ordenado
+        // Convertir a array ordenado (solo meses con transacciones)
         Array.from(mesesMap.entries()).sort().forEach(([mesKey, data]) => {
             const fecha = new Date(mesKey + '-01');
             const mesNombre = fecha.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
@@ -206,27 +253,6 @@ export const reportService = {
                 fechaObjetivo: goal.fechaObjetivo
             };
         });
-    },
-
-    async update(userId: string, reportId: string, data: Partial<Report>) {
-        const report = await reportRepo.findOne({
-            where: { id: reportId, userId },
-        });
-
-        if (!report) throw new Error("Reporte no encontrado");
-
-        Object.assign(report, data);
-        return await reportRepo.save(report);
-    },
-
-    async delete(userId: string, reportId: string) {
-        const report = await reportRepo.findOne({
-            where: { id: reportId, userId },
-        });
-
-        if (!report) throw new Error("Reporte no encontrado");
-
-        return await reportRepo.remove(report);
     },
 
     async generateCSV(userId: string, tipo: string, periodo?: string) {
