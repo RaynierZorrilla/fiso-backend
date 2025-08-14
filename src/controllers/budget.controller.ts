@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { budgetService } from "../services/budget.service";
 import { getUserIdFromRequest } from "../utils/getUserIdFromRequest";
+import { currentMonthYYYYMM } from "../utils/monthRange";
 
 export const budgetController = {
     async create(req: Request, res: Response) {
@@ -15,22 +16,24 @@ export const budgetController = {
 
     async getAll(req: Request, res: Response) {
         try {
-            const userId = getUserIdFromRequest(req);
-            const budgets = await budgetService.getAll(userId);
-            res.json(budgets);
+          const userId = getUserIdFromRequest(req);
+          const month = (req.query.month as string) || currentMonthYYYYMM();
+          const budgets = await budgetService.getAllWithSpent(userId, month);
+          res.json(budgets);
         } catch (err) {
-            console.error("❌ Error en GET /api/budgets:", err);
-            res.status(400).json({ error: "Error al obtener presupuestos" });
+          console.error("❌ Error en GET /api/budgets:", err);
+          res.status(400).json({ error: "Error al obtener presupuestos" });
         }
     },
 
     async summary(req: Request, res: Response) {
         try {
-            const userId = getUserIdFromRequest(req);
-            const data = await budgetService.getSummary(userId);
-            res.json(data);
+          const userId = getUserIdFromRequest(req);
+          const month = (req.query.month as string) || currentMonthYYYYMM();
+          const data = await budgetService.getSummary(userId, month);
+          res.json(data);
         } catch (err) {
-            res.status(500).json({ error: "Error al obtener el resumen de presupuesto" });
+          res.status(500).json({ error: "Error al obtener el resumen de presupuesto" });
         }
     },
 
