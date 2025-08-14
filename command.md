@@ -1,69 +1,67 @@
 # 🧰 Comandos útiles para el backend FISO
 
 ## 🔧 Instalación del proyecto
-
 ```bash
 npm install
+```
 
-
-## Levantar proyecto con Docker
+## 🚀 Levantar proyecto con Docker
+```bash
 docker-compose up --build
+```
 
-
-## Parar los contenedores
+## ⏹️ Parar los contenedores
+```bash
 docker-compose down
+```
 
+## 🛠 Compilar proyecto manualmente
+> Requiere PostgreSQL corriendo localmente y `.env` configurado.
+```bash
+npm run build
+```
 
-## Compilar proyecto manualmente
-npm run build # Requiere tener PostgreSQL corriendo localmente y .env bien configurado.
-
-## Reiniciar proyecto
+## 🔄 Reiniciar proyecto
+```bash
 docker-compose restart
-
-
-# Comandos útiles para migraciones con TypeORM
-
-## Generar una nueva migración
-
-```
-npm run typeorm migration:generate src/migrations/nombre-de-migracion
 ```
 
+---
+
+# ⚙️ Migraciones con TypeORM
+
+## 📜 Generar una nueva migración
+```bash
+npm run typeorm migration:generate src/migrations/NombreDeLaMigracion
+```
 > Reemplaza `NombreDeLaMigracion` por un nombre descriptivo (sin espacios).
 
-## Aplicar todas las migraciones pendientes
-
-```
+## 📥 Aplicar migraciones pendientes
+```bash
 npm run migration:run
 ```
 
-## Revertir la última migración aplicada
-
-```
+## ↩️ Revertir la última migración
+```bash
 npm run migration:revert
 ```
 
 ---
 
-Estos comandos utilizan la configuración personalizada de TypeORM definida en `src/config/data-source.ts` y las variables de entorno del archivo `.env`.
+# 🔄 Flujo recomendado para desarrollo local
 
-# Flujo recomendado para desarrollo local
-
-## 1. Levanta solo la base de datos con Docker
-
-```
+## 1️⃣ Levantar solo la base de datos
+```bash
 docker-compose up -d postgres
 ```
 
-## 2. Corre el backend localmente (con recarga automática)
-
-```
+## 2️⃣ Ejecutar el backend en modo desarrollo (hot reload)
+```bash
 npm run dev
 ```
 
-## 3. Variables de entorno recomendadas para desarrollo local (.env)
-
-```
+## 3️⃣ Variables de entorno recomendadas (`.env`)
+```env
 DB_HOST=localhost
 DB_PORT=5432
 DB_USER=fiso_user
@@ -71,21 +69,16 @@ DB_PASSWORD=fiso_pass
 DB_NAME=fiso_db
 ```
 
-## 4. Limpiar la base de datos (opcional, borra todos los datos)
-
-```
+## 4️⃣ Limpiar la base de datos (elimina datos y contenedor)
+```bash
 docker-compose down -v
 ```
 
-## 5. Reiniciar solo la base de datos
-
-```
+## 5️⃣ Reiniciar solo la base de datos
+```bash
 docker-compose restart postgres
 ```
 
 ---
 
-Este flujo te permite desarrollar de forma ágil, con una base de datos aislada y un backend que recarga automáticamente los cambios.
-
-
-
+💡 **Tip:** Este flujo te permite desarrollar de forma ágil, manteniendo la base de datos aislada y el backend en modo recarga automática para reflejar los cambios al instante.
